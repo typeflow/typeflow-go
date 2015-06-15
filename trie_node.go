@@ -95,7 +95,9 @@ func (t *TrieNode) Words() (words []string) {
 	stack.Push(unsafe.Pointer(node))
 	for stack.Size() > 0 {
 		node = TrieNodePtr(stack.Pop().(unsafe.Pointer))
-		word = append(word, node.C)
+		if !node.isRoot {
+			word = append(word, node.C)
+		}
 
 		if len(node.Children) == 0 {
 			if node.IsWord {
@@ -103,8 +105,8 @@ func (t *TrieNode) Words() (words []string) {
 			}
 			word = word[:len(word) - 1]
 		}
-		for c := range node.Children {
-			stack.Push(c)
+		for _, c := range node.Children {
+			stack.Push(unsafe.Pointer(c))
 		}
 	}
 
