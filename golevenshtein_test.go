@@ -114,20 +114,32 @@ func countTrieNodes(trie *TrieNode, i *int) {
 func Test_trieAppendsWords(t *testing.T) {
 	rootTrie := NewTrie()
 
-	rootTrie.Append([]rune("testWord1"), true)
-	rootTrie.Append([]rune("testWord2"), true)
+	const (
+		w1 = "testWord1"
+	    w2 = "testWord2"
+	)
 
-	if rootTrie.HasWord([]rune("testWord1")) == false {
-		t.Errorf("Finding word 'testWord1' in trie fails")
+	rootTrie.Append([]rune(w1), true)
+	rootTrie.Append([]rune(w2), true)
+
+	if rootTrie.HasWord([]rune(w1)) == false {
+		t.Errorf("Finding word '%s' in trie fails", w1)
 	}
 
-	if rootTrie.HasWord([]rune("testWord2")) == false {
-		t.Errorf("Finding word 'testWord2' in trie fails")
+	if rootTrie.HasWord([]rune(w2)) == false {
+		t.Errorf("Finding word '%s' in trie fails", w2)
 	}
 	var i int = 0
 	countTrieNodes(rootTrie, &i)
 	if i != 11 {
 		t.Fatalf("Expected 11 nodes, got %d", i)
+	}
+
+	words := rootTrie.Words()
+	for _, word := range words {
+		if word != w1 && word != w2 {
+			t.Fatal("Cannot find expected words in the list of words in the trie: %v", words)
+		}
 	}
 }
 
