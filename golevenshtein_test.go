@@ -2,18 +2,26 @@ package golevenshtein
 
 import (
 	"testing"
-	"fmt"
 )
 
-var testCases = []struct {
+type perm struct {
 	source      string
 	destination string
-	distance    Score
-}{
+	distance    int
+}
+
+var testCases = []perm{
 	{"alessandro", "lessandro", 1},
 	{"alessandro", "alesasndro", 2},
 	{"zzz", "az", 2},
 	{"--|", "---", 1},
+}
+
+var incrementalTestCases = [][]perm{
+	{ {"aaa", "abc", 2 } },
+	{{ "al", "al",  0 }, { "ex", "es", 1}},
+	{{"a", "b", 1}, {"aa", "ba", 2}},
+	{{"a", "a", 0}, { "l", "l", 0}, {"e", "e", 0}, {"s", "s", 0}, {"s", "a", 1}, {"a", "s", 2}, {"n", "n", 2} },
 }
 
 func Test_compareSlicesRecursive(t *testing.T) {
@@ -24,129 +32,26 @@ func Test_compareSlicesRecursive(t *testing.T) {
 	}
 }
 
-func Test_trieFindsWords(t *testing.T) {
-	rootTrie := NewTrie()
+func Test_compareSlicesWithMatrixBaseCase(t *testing.T) {
+	for _, v := range incrementalTestCases[0] {
+		ls := InitLState()
+		ls.UpdateState([]rune(v.source), []rune(v.destination))
 
-	// manually appending two short
-	// words to make sure test is
-	// exclusively run against
-	// the find function
-	//
-	// words added: cat, dog
-
-	// dog
-	tr := NewTrie()
-	tr.isRoot = false
-	tr.Parent = rootTrie
-	tr.C = 'd'
-
-	rootTrie.Children['d'] = tr
-
-	tr1 := NewTrie()
-	tr1.isRoot = false
-	tr1.Parent = tr
-	tr1.C = 'o'
-	tr.Children['o'] = tr1
-
-	tr2 := NewTrie()
-	tr2.isRoot = false
-	tr2.Parent = tr1
-	tr2.C = 'g'
-	tr2.IsWord = true
-	tr1.Children['g'] = tr2
-
-	// cat
-	tr3 := NewTrie()
-	tr3.isRoot = false
-	tr3.Parent = rootTrie
-	tr3.C = 'c'
-
-	rootTrie.Children['c'] = tr3
-
-	tr4 := NewTrie()
-	tr4.isRoot = false
-	tr4.Parent = tr3
-	tr4.C = 'a'
-	tr3.Children['a'] = tr4
-
-	tr5 := NewTrie()
-	tr5.isRoot = false
-	tr5.Parent = tr4
-	tr5.C = 't'
-	tr5.IsWord = true
-	tr4.Children['t'] = tr5
-
-	if rootTrie.HasWord([]rune("dog")) == false {
-		t.Errorf("Finding word 'dog' in trie fails")
-	}
-
-	if rootTrie.HasWord([]rune("cat")) == false {
-		t.Errorf("Finding word 'cat' in trie fails")
-	}
-
-	if rootTrie.HasWord([]rune("foo")) == true {
-		t.Errorf("Finding word 'foo' in trie unexpectedly succeeds")
-	}
-
-	var i int = 0
-	countTrieNodes(rootTrie, &i)
-	if i != 7 {
-		t.Fatalf("Expected 7 nodes, got %d", i)
-	}
-}
-
-/*
- * A utility function to make sure
- * node append workd properly for our trie
- */
-func countTrieNodes(trie *TrieNode, i *int) {
-	if len(trie.Children) == 0 {
-		*i = *i + 1
-		return
-	}
-	for _, v := range trie.Children {
-		countTrieNodes(v, i)
-	}
-
-	*i = *i + 1
-}
-
-func Test_trieAppendsWords(t *testing.T) {
-	rootTrie := NewTrie()
-
-	rootTrie.Append([]rune("testWord1"), true)
-	rootTrie.Append([]rune("testWord2"), true)
-
-	if rootTrie.HasWord([]rune("testWord1")) == false {
-		t.Errorf("Finding word 'testWord1' in trie fails")
-	}
-
-	if rootTrie.HasWord([]rune("testWord2")) == false {
-		t.Errorf("Finding word 'testWord2' in trie fails")
-	}
-	var i int = 0
-	countTrieNodes(rootTrie, &i)
-	if i != 11 {
-		t.Fatalf("Expected 11 nodes, got %d", i)
-	}
-}
-
-/*
- * A few helper functions
- */
-/*func printTrie(trie *TrieNode) {
-	for _, v := range trie.Children {
-		runes := make([]rune, 0)
-		printTrie_(v, append(runes, v.C))
-	}
-}*/
-
-func printTrie_(trie *TrieNode, runes []rune) {
-	for _,v := range trie.Children {
-		if v.IsWord {
-			fmt.Println(string(append(runes, v.C)))
+		if cmp := ls.Distance(); cmp != v.distance {
+			t.Errorf("Comparing '%s' and '%s' failed: result was %v but expected was %v", v.source, v.destination, cmp, v.distance)
 		}
-		printTrie_(v, append(runes, v.C))
 	}
 }
 
+func Test_compareSlicesWithMatrix(t* testing.T) {
+	for _, v := range incrementalTestCases {
+		ls := InitLState()
+		for _, increment := range v {
+			ls.UpdateState([]rune(increment.source), []rune(increment.destination))
+
+			if cmp := ls.Distance(); cmp != increment.distance {
+				t.Errorf("Comparing '%s' and '%s' failed: result was %v but expected was %v", increment.source, increment.destination, cmp, increment.distance)
+			}
+		}
+	}
+}
