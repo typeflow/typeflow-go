@@ -43,7 +43,7 @@ func Test_compareSlicesWithMatrixBaseCase(t *testing.T) {
 	}
 }
 
-func Test_compareSlicesWithMatrix(t* testing.T) {
+func Test_compareSlicesWithMatrixIncremental(t* testing.T) {
 	for _, v := range incrementalTestCases {
 		ls := InitLState()
 		for _, increment := range v {
@@ -53,5 +53,18 @@ func Test_compareSlicesWithMatrix(t* testing.T) {
 				t.Errorf("Comparing '%s' and '%s' failed: result was %v but expected was %v", increment.source, increment.destination, cmp, increment.distance)
 			}
 		}
+	}
+}
+
+func Benchmark_recursiveLevenshtein(b *testing.B) {
+	for _, v := range testCases {
+		compareSlicesRecursive([]byte(v.source), []byte(v.destination))
+	}
+}
+
+func Benchmark_matrixLevenshtein(b *testing.B) {
+	for _, v := range testCases {
+		ls := InitLState()
+		ls.UpdateState([]rune(v.source), []rune(v.destination))
 	}
 }
