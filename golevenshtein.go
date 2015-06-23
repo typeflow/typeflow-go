@@ -1,50 +1,15 @@
 package golevenshtein
 
 import (
-	"errors"
-	"fmt"
 	"math"
+	"errors"
 )
 
-func minimum(values ...int) (int, error) {
-	if len(values) == 0 {
-		return -1, errors.New("Cannot find minimum of empty list")
-	}
-	var min int = values[0]
-	for _, v := range values {
-		if v < min {
-			min = v
-		}
-	}
-	return min, nil
-}
-
-/*
- * A slow recursive levenshtein implementation
- * only used for benchmarking purposes
- */
-func compareSlicesRecursive(first, second []byte) int {
-	if len(first) == 0 || len(second) == 0 {
-		return  int(math.Max(float64(len(first)), float64(len(second))))
-	}
-	len1 := len(first)
-	len2 := len(second)
-	var cost int
-	if first[len1-1] == second[len2-1] {
-		cost = 0
-	} else {
-		cost = 1
-	}
-
-	min, err := minimum(int(compareSlicesRecursive(first[0:len1-1], second))+1,
-		int(compareSlicesRecursive(first, second[0:len2-1]))+1,
-		int(compareSlicesRecursive(first[0:len1-1], second[0:len2-1]))+cost)
-	if err != nil {
-		fmt.Println(err)
-		return -1
-	}
-	return min
-}
+// Errors
+var (
+	OutOfRangeRollbackError = errors.New("Unexpected rollback: out of range")
+	EmptyStateError         = errors.New("Unexpected: current state is empty")
+)
 
 type LState struct {
 	matrix   [][]int
@@ -62,13 +27,14 @@ func InitLState() (ls *LState) {
 }
 
 func (state *LState) UpdateState(w1part, w2part []rune) {
-	if len(w1part) == 0 || len(w2part) == 0 {
-		panic("Unexpected 0 length argument")
-	}
     if state.matrix == nil {
         state.initializeMatrix(len(w1part), len(w2part))
-		state.w1 = w1part
-		state.w2 = w2part
+
+		state.w1 = make([]rune, len(w1part))
+		copy(state.w1, w1part)
+
+		state.w2 = make([]rune, len(w2part))
+		copy(state.w2, w2part)
 
 		state.fillMatrix(0, 0)
 	} else {
@@ -92,25 +58,45 @@ func (state *LState) UpdateState(w1part, w2part []rune) {
 		state.matrix = cols
 
 		// initializing the extended part now
-		for i := incr1; i < len(state.w1); i++ {
-			if cap(state.matrix[i]) > i {
-				state.matrix[i][0] = i
-			} else {
-				state.matrix[i] = append(state.matrix[i], i)
-			}
+		for i := incr1; i < len(state.w1) + 1; i++ {
+			state.matrix[i][0] = i
 		}
 
-		// initializing
-		for i := incr2; i < len(state.w2); i++ {
-			if cap(state.matrix[0]) > i {
-				state.matrix[0][i] = i
-			} else {
-				state.matrix[0] = append(state.matrix[0], i)
-			}
+		// initializing the extended part now
+		for i := incr2; i < len(state.w2) + 1; i++ {
+			state.matrix[0][i] = i
 		}
 
-		state.fillMatrix(incr2 - 1, incr1 - 1)
+		// refilling matrix
+		// TODO this can probably be improved
+		// TODO avoiding refilling not needed cells
+		state.fillMatrix(0, 0)
 	}
+}
+
+func (state *LState) RollbackBy(cols, rows int) (error) {
+    if len(state.matrix) == 0 {
+		return EmptyStateError
+	}
+
+    if len(state.matrix) < cols {
+		return OutOfRangeRollbackError
+	}
+
+	state.matrix = state.matrix[:len(state.matrix) - cols]
+
+    for index, row := range state.matrix {
+		if len(row) < rows {
+			return OutOfRangeRollbackError
+		}
+
+		state.matrix[index] = row[:len(row) - rows]
+	}
+
+	state.w2 = state.w2[:len(state.w2) - rows]
+	state.w1 = state.w1[:len(state.w1) - cols]
+
+	return nil
 }
 
 func (state *LState) initializeMatrix(s1, s2 int) {
@@ -120,12 +106,12 @@ func (state *LState) initializeMatrix(s1, s2 int) {
 	}
 
 	// initializing
-	for i := 0; i < s1; i++ {
+	for i := 1; i < s1 + 1; i++ {
 		state.matrix[i][0] = i
 	}
 
 	// initializing
-	for i := 0; i < s2; i++ {
+	for i := 1; i < s2 + 1; i++ {
 		state.matrix[0][i] = i
 	}
 }
