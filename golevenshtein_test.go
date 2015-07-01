@@ -4,6 +4,9 @@ import (
 	"testing"
 	"fmt"
 	"strings"
+	"os"
+	"io"
+	"bufio"
 )
 
 func (s* LState) printMatrix(t* testing.T) {
@@ -147,6 +150,24 @@ func Test_wordSource(t *testing.T) {
 		skip = false
 
 		return
+	}
+
+	// building country name
+	// source from file
+    file, err := os.Open("testdata/countries.txt")
+	country_names := make([]string, 0)
+	if err != nil {
+		t.Log("Cannot open expected file testdata/countries.txt. Skipping this test.")
+		t.SkipNow()
+		return
+	}
+    reader := bufio.NewReader(file)
+	for  {
+		line, err := reader.ReadString('\n');
+		if err == io.EOF {
+			break
+		}
+		country_names = append(country_names, line[:len(line)-1])
 	}
 
 	ws.SetSource(country_names, []WordFilter{ filter })

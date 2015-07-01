@@ -9,7 +9,6 @@ import (
 // unexported alternative levenshtein
 // implementations
 
-
 /*
  * A slow recursive levenshtein implementation
  * only used for benchmarking purposes
