@@ -1,4 +1,4 @@
-package golevenshtein
+package typeflow
 
 import (
 	"math"

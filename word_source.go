@@ -1,7 +1,7 @@
-package golevenshtein
+package typeflow
 
 import (
-	. "github.com/alediaferia/triego"
+	. "github.com/typeflow/triego"
 )
 
 type WordFilter func (w string) (word string, skip bool)
