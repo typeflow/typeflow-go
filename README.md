@@ -1,4 +1,4 @@
-typeflow-go
+typeflow-go [![GoDoc](https://godoc.org/github.com/typeflow/typeflow-go/web?status.png)](https://godoc.org/github.com/typeflow/typeflow-go/web?status.png)
 =============
 
 - [Introduction](#Introduction)
