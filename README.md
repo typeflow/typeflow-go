@@ -29,7 +29,7 @@ So make sure you `go get` them :)
 
 ```sh
 $ go get github.com/alediaferia/stackgo
-$ go get github.com/alediaferia/triego
+$ go get github.com/typeflow/triego
 ```
 
 ### A straightforward example
