@@ -1,4 +1,4 @@
-package golevenshtein
+package typeflow
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 // this file contains just some
 // unexported alternative levenshtein
 // implementations
-
 
 /*
  * A slow recursive levenshtein implementation
