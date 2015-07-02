@@ -23,7 +23,7 @@ Likely you'll want to use the `WordSource` type which provides the most high-lev
 This project currently only depends on two other projects of mine:
 
 - [stackgo](https://github.com/alediaferia/stackgo)
-- [triego](https://github.com/alediaferia/triego)
+- [triego](https://github.com/typeflow/triego)
 
 So make sure you `go get` them :)
 
