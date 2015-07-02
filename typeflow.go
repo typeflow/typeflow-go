@@ -1,3 +1,9 @@
+// This package contains everything you need
+// to work with word-based searching.
+// Its internals are founded on the Levenshtein
+// distance.
+// Check https://github.com/typeflow/typeflow-go
+// for an example.
 package typeflow
 
 import (
@@ -7,10 +13,21 @@ import (
 
 // Errors
 var (
+	// This error occurs when trying to rollback more than needed
 	OutOfRangeRollbackError = errors.New("Unexpected rollback: out of range")
 	EmptyStateError         = errors.New("Unexpected: current state is empty")
 )
 
+// An LState encapsulates the current
+// state of a levenshtein-based distance
+// computation.
+// In particular, the matrix-based
+// levenshtein computation is used.
+// An LState instance can be updated
+// or rolled back which is useful
+// for iterative word computations. It will
+// take care of managing the internal state
+// and memory allocation for you.
 type LState struct {
 	matrix   [][]int
 
@@ -19,6 +36,10 @@ type LState struct {
 	w2       []rune
 }
 
+// Initializes an empty LState.
+// This is the first step required
+// for working with a matrix-based
+// levenshtein computation.
 func InitLState() (ls *LState) {
 	ls = new(LState)
 	ls.matrix = nil
@@ -26,6 +47,28 @@ func InitLState() (ls *LState) {
 	return
 }
 
+// Updates the current state. w1part and w2part
+// are respectively the parts to be appended
+// to the current state.
+//
+// E.g. you may want to compare the words
+// 'levenshtein' and 'einstein' in two steps:
+//
+// 1) the first UpdateState will be called
+// passing in 'leven' as w1part and 'ein' as w2part.
+//
+// 2) the second UpdateState will be called passing
+// in 'stein' as w1part and 'stein' as w2part.
+//
+// You will then be able to call Distance() on the
+// updated state and get 4 as result.
+//
+// Complexity: O(MAX(fullw1,fullw2))
+// fullw1, fullw2 are actually the full lengths of the
+// all characters added by all the UpdateState calls
+// until now. Plans are there to reduce complexity
+// to just O(MAX(w1part, w2part)) but I've not yet
+// investigated about it.
 func (state *LState) UpdateState(w1part, w2part []rune) {
     if state.matrix == nil {
         state.initializeMatrix(len(w1part), len(w2part))
@@ -74,6 +117,10 @@ func (state *LState) UpdateState(w1part, w2part []rune) {
 	}
 }
 
+// Rolls back the current state. cols is the number of
+// characters to roll back referencing what was w1part
+// in UpdateState. rows will be the number of characters
+// to roll back referencing what was w2part in UpdateState.
 func (state *LState) RollbackBy(cols, rows int) (error) {
     if len(state.matrix) == 0 {
 		return EmptyStateError
@@ -97,6 +144,19 @@ func (state *LState) RollbackBy(cols, rows int) (error) {
 	state.w1 = state.w1[:len(state.w1) - cols]
 
 	return nil
+}
+
+// Returns the newly computed distance
+// or math.MaxInt32 if no distance has been
+// computed yet.
+// This method has complexity O(1) as
+// the distance is computed upon every
+// UpdateState call.
+func (state *LState) Distance() int {
+	if state.matrix != nil {
+		return state.matrix[len(state.w1)][len(state.w2)]
+	}
+	return math.MaxInt32
 }
 
 func (state *LState) initializeMatrix(s1, s2 int) {
@@ -133,11 +193,4 @@ func (state *LState) fillMatrix(startRow, startCol int) {
 			}
 		}
 	}
-}
-
-func (state *LState) Distance() int {
-	if state.matrix != nil {
-		return state.matrix[len(state.w1)][len(state.w2)]
-	}
-	return math.MaxInt32
 }
