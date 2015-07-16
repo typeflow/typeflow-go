@@ -7,6 +7,7 @@ typeflow-go [![GoDoc](https://godoc.org/github.com/typeflow/typeflow-go/web?stat
   - [A straightforward example](##a-straightforward-example)
 - [A note on similarity](#a-note-on-similarity)
 - [Docs](#docs)
+- [Benchmarks](#benchmarks)
 - [Contribute](#contribute)
 - [License](#license)
 
@@ -164,6 +165,12 @@ I tried and will keep trying my best to keep the sources well documented.
 You can help me improving the docs as well!
 
 Docs can be found at: https://godoc.org/github.com/typeflow/typeflow-go
+
+Benchmarks
+----------
+
+A dedicated file is [here](performance/BENCHMARKS.md) to have insights about performance
+of this project. Please, help me keep it up-to-date.
 
 Contribute
 ----------
