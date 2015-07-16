@@ -67,33 +67,30 @@ func InitLState() (ls *LState) {
 // You will then be able to call Distance() on the
 // updated state and get 4 as result.
 //
-// Complexity: O(MAX(fullw1,fullw2))
-// fullw1, fullw2 are actually the full lengths of the
-// all characters added by all the UpdateState calls
-// until now. Plans are there to reduce complexity
-// to just O(MAX(w1part, w2part)) but I've not yet
-// investigated about it.
 func (state *LState) UpdateState(w1part, w2part []rune) {
     if state.setup == false {
-
 		state.w1 = make([]rune, len(w1part))
 		copy(state.w1, w1part)
 
 		state.w2 = make([]rune, len(w2part))
 		copy(state.w2, w2part)
 
-        state.initializeMatrix(len(state.w2))
-		state.fillMatrix(0, 0)
         state.setup = true
 	} else {
-
-		// we need to increase size
 		state.w1 = append(state.w1, w1part...)
 		state.w2 = append(state.w2, w2part...)
         
-        state.initializeMatrix(len(state.w2))
-        state.fillMatrix(0, 0)
-	}
+        new_vec1 := make([]int, len(state.vec1) + len(w2part))
+        new_vec2 := make([]int, len(state.vec2) + len(w2part))
+        
+        copy(new_vec1, state.vec1)
+        copy(new_vec2, state.vec2)
+        
+        state.vec1 = new_vec1
+        state.vec2 = new_vec2
+    }
+    state.initializeMatrix(len(state.w2))
+    state.fillMatrix(0, 0)    
 }
 
 // Rolls back the current state. cols is the number of
@@ -159,7 +156,7 @@ func (state *LState) fillMatrix(startRow, startCol int) {
             state.vec2[j + 1] = min
         }
         
-        for j := 0; j < len(state.vec1); j++ {
+        for j := startCol; j < len(state.vec1); j++ {
             state.vec1[j] = state.vec2[j]
         }
 	}
