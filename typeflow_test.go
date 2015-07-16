@@ -203,14 +203,18 @@ OuterLoop:
 }
 
 func Benchmark_recursiveLevenshtein(b *testing.B) {
-	for _, v := range testCases {
-		compareSlicesRecursive([]byte(v.source), []byte(v.destination))
-	}
+    for i:= 0; i < b.N; i++ {
+    	for _, v := range testCases {
+    		compareSlicesRecursive([]byte(v.source), []byte(v.destination))
+    	}
+    }
 }
 
 func Benchmark_matrixLevenshtein(b *testing.B) {
-	for _, v := range testCases {
-		ls := InitLState()
-		ls.UpdateState([]rune(v.source), []rune(v.destination))
-	}
+    for i:= 0; i < b.N; i++ {    
+    	for _, v := range testCases {
+    		ls := InitLState()
+    		ls.UpdateState([]rune(v.source), []rune(v.destination))
+    	}
+    }
 }
