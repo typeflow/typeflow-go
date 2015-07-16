@@ -12,7 +12,7 @@ The branch **feature/2vecs** is there to support the [2 matrix rows approach](ht
 
   Times | ns/op  | B/op   | allocs/op |       CPU              | Needs Update 
 --------|--------|--------|-----------|------------------------|--------------
- 100000   12418    3776       54        2.5 GHz Intel Core i7       NO
+ 100000 |  12418 | 3776   |    54     |  2.5 GHz Intel Core i7 |     NO
 
 Usage
 ------
