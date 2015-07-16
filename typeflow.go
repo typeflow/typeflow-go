@@ -76,6 +76,8 @@ func (state *LState) UpdateState(w1part, w2part []rune) {
 		copy(state.w2, w2part)
 
         state.setup = true
+        state.initializeMatrix(len(state.w2))
+        
 	} else {
 		state.w1 = append(state.w1, w1part...)
 		state.w2 = append(state.w2, w2part...)
@@ -88,8 +90,11 @@ func (state *LState) UpdateState(w1part, w2part []rune) {
         
         state.vec1 = new_vec1
         state.vec2 = new_vec2
+        
+    	for i := 0; i < len(state.vec1); i++ {
+    		state.vec1[i] = i
+    	}
     }
-    state.initializeMatrix(len(state.w2))
     state.fillMatrix(0, 0)    
 }
 
@@ -109,7 +114,12 @@ func (state *LState) RollbackBy(cols, rows int) (error) {
 	state.w2 = state.w2[:len(state.w2) - rows]
 	state.w1 = state.w1[:len(state.w1) - cols]
     
-	state.initializeMatrix(len(state.w2))
+    state.vec1 = state.vec1[:len(state.vec1) - rows]
+    state.vec2 = state.vec2[:len(state.vec2) - rows]
+    
+	for i := 0; i < len(state.vec1); i++ {
+		state.vec1[i] = i
+	}
     state.fillMatrix(0, 0)
 
 	return nil
