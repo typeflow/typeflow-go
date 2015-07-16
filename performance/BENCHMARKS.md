@@ -5,14 +5,11 @@ A few notes on performance for this tiny package are shared here
 Results
 -------
 
-Currently a matrix-based implementation for the levenshtein computation is provided.
-You can read more about it [here](https://en.wikipedia.org/wiki/Levenshtein_distance#Iterative_with_full_matrix).
-
-The branch **feature/2vecs** is there to support the [2 matrix rows approach](https://en.wikipedia.org/wiki/Levenshtein_distance#Iterative_with_two_matrix_rows) that is expected to improve performance a lot :) .
+[2 matrix rows approach](https://en.wikipedia.org/wiki/Levenshtein_distance#Iterative_with_two_matrix_rows) is now used!
 
   Times | ns/op  | B/op   | allocs/op |       CPU              | Needs Update 
 --------|--------|--------|-----------|------------------------|--------------
- 100000 |  12418 | 3776   |    54     |  2.5 GHz Intel Core i7 |     NO
+ 200000 |  7423 | 1424   |    28     |  2.5 GHz Intel Core i7 |     NO
 
 Usage
 ------

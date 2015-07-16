@@ -10,13 +10,15 @@ import (
 )
 
 func (s* LState) printMatrix(t* testing.T) {
-	for row_index, _ := range s.matrix[0] {
-		row := ""
-		for col_index,_ := range s.matrix {
-			row =fmt.Sprintf("%s[ %v ]", row, s.matrix[col_index][row_index])
-		}
-		t.Logf("%s\n", row)
+	row := ""
+	for col_index, _ := range s.vec1 {
+		row = fmt.Sprintf("%s[ %v ]", row, s.vec1[col_index])
 	}
+    row = fmt.Sprintf("%s\n", row)
+	for col_index, _ := range s.vec2 {
+		row = fmt.Sprintf("%s[ %v ]", row, s.vec2[col_index])
+	}
+	t.Logf("\n%s\n", row)
 }
 
 type minimum_testcase struct {
