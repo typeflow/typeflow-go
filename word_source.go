@@ -88,38 +88,27 @@ func (ws* WordSource) FindMatch(substr string, minSimilarity float32) (matches [
 	matrix.UpdateState([]rune{}, []rune(substr))
 
 	err = nil
-	last_depth := 0
-	dirty_range := dirty_range{0, 0}
+	last_prefix := 0
 
-    ws.trie.EachNode(func (node *TrieNode, halt *bool) {
-		rollback_size := 0
-		if !node.IsRoot() {
-			if node.Depth() <= last_depth {
-				rollback_size = (last_depth - node.Depth() + 1)
-				word = word[:len(word) - rollback_size]
-				err = matrix.RollbackBy(rollback_size, 0)
-				if err != nil {
-				    *halt = true
-					return
-				}
-				dirty_range.low -= rollback_size
-				dirty_range.length = 0
-			}
+    ws.trie.EachPrefix(func (prefix string, is_word bool) (skipsubtree, halt bool) {
+		if !is_word {
+			return false, false
+		}
+		if len(prefix) < len(last_prefix) {
+			matrix.RollbackBy(len(last_prefix) - len(prefix), 0)
+		}
+		last_prefix = prefix
 
-			word = append(word, node.C)
-			dirty_range.length += 1
-			matrix.UpdateState([]rune(word[dirty_range.low:(dirty_range.low + dirty_range.length)]), []rune{})
-			dirty_range.low    += dirty_range.length
-			dirty_range.length = 0
+		if similarity := computeSimilarity(len(word), len(substr), matrix.Distance()); similarity >= minSimilarity {
+			matches = append(matches, Match{string(word), similarity})
+		} else {
+			// the computed similarity is too low
+			// so there's no need to proceed further
+			// with this subtree
+			return true, false
 		}
 
-		if node.IsWord {
-			if similarity := computeSimilarity(len(word), len(substr), matrix.Distance()); similarity >= minSimilarity {
-				matches = append(matches, Match{string(word), similarity})
-			}
-		}
-
-		last_depth = node.Depth()
+		return false, false
 	})
 
 	return
