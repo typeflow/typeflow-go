@@ -2,6 +2,7 @@ package typeflow
 
 import (
 	. "github.com/typeflow/triego"
+	"github.com/alediaferia/stackgo"
 )
 
 // Represents a filter to apply to the
@@ -37,11 +38,7 @@ type Match struct {
 }
 
 func computeSimilarity(lenw1, lenw2, ld int) (float32) {
-	den, err := maximum(lenw1, lenw2)
-
-	if err != nil {
-		panic(err)
-	}
+	den := maximum(lenw1, lenw2)
 
 	return 1.0 - float32(ld)/float32(den)
 }
@@ -79,36 +76,56 @@ type dirty_range struct {
 // in the source.
 // minSimilarity is the minimum accepted similarity
 // to use when filling the matches slice.
-// substr is the string to match against.
+// Param substr is the string to match against.
 func (ws* WordSource) FindMatch(substr string, minSimilarity float32) (matches []Match, err error) {
 	matches = make([]Match, 0, ws.wc)
-	word  := make([]rune, 0)
 
-	matrix := InitLState()
-	matrix.UpdateState([]rune{}, []rune(substr))
+	matrix := InitLState(substr)
 
 	err = nil
-	last_prefix := 0
+	last_depth  := -1
 
-    ws.trie.EachPrefix(func (prefix string, is_word bool) (skipsubtree, halt bool) {
-		if !is_word {
+	// we'll take advantage
+	// of a stack for keeping
+	// track of the added prefix
+	// lengths
+	lengths := stackgo.NewStack()
+
+    ws.trie.EachPrefix(func (info PrefixInfo) (skipsubtree, halt bool) {
+
+		if info.Depth <= last_depth {
+			// we are going up again
+			// in the radix tree so
+			// we roll back the previous
+			// update
+			matrix.RollbackBy(lengths.Pop().(int) - info.SharedLength)
+		}
+		last_depth  = info.Depth
+		matrix.UpdateState([]rune(info.Prefix)[info.SharedLength:])
+		lengths.Push(len(info.Prefix))
+
+		// if this prefix
+		// is not yet a word we took
+		// the advantage of preparing
+		// the comparison matrix
+		// in advance as for sure the
+		// words that are about to come
+		// will have this as prefix string
+		if !info.IsWord {
 			return false, false
 		}
-		if len(prefix) < len(last_prefix) {
-			matrix.RollbackBy(len(last_prefix) - len(prefix), 0)
-		}
-		last_prefix = prefix
 
-		if similarity := computeSimilarity(len(word), len(substr), matrix.Distance()); similarity >= minSimilarity {
-			matches = append(matches, Match{string(word), similarity})
-		} else {
-			// the computed similarity is too low
-			// so there's no need to proceed further
-			// with this subtree
-			return true, false
+		similarity := computeSimilarity(len(matrix.source), len(substr), matrix.Distance())
+
+		if similarity >= minSimilarity {
+			matches = append(matches, Match{string(matrix.source), similarity})
+			return false, false
 		}
 
-		return false, false
+		// the computed similarity is too low
+		// so there's no need to proceed further
+		// with this subtree
+		return true, false
 	})
 
 	return

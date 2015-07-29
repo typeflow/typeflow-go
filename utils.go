@@ -1,12 +1,8 @@
 package typeflow
 
-import (
-	"errors"
-)
-
-func minimum(values ...int) (int, error) {
+func minimum(values ...int) (int) {
 	if len(values) == 0 {
-		return -1, errors.New("Cannot find minimum of empty list")
+		panic("Cannot find minimum of empty list")
 	}
 	var min int = values[0]
 	for _, v := range values {
@@ -14,12 +10,12 @@ func minimum(values ...int) (int, error) {
 			min = v
 		}
 	}
-	return min, nil
+	return min
 }
 
-func maximum(values ...int) (int, error) {
+func maximum(values ...int) (int) {
 	if len(values) == 0 {
-		return -1, errors.New("Cannot find maximum of empty list")
+		panic("Cannot find maximum of empty list")
 	}
 	var max int = values[0]
 	for _, v := range values {
@@ -28,7 +24,7 @@ func maximum(values ...int) (int, error) {
 		}
 	}
 
-	return max, nil
+	return max
 }
 
 func abs(value int) (v int) {
