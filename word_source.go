@@ -2,7 +2,6 @@ package typeflow
 
 import (
 	. "github.com/typeflow/triego"
-	"github.com/alediaferia/stackgo"
 )
 
 // Represents a filter to apply to the
@@ -79,30 +78,9 @@ type dirty_range struct {
 // Param substr is the string to match against.
 func (ws* WordSource) FindMatch(substr string, minSimilarity float32) (matches []Match, err error) {
 	matches = make([]Match, 0, ws.wc)
-
-	matrix := InitLState(substr)
-
 	err = nil
-	last_depth  := -1
-
-	// we'll take advantage
-	// of a stack for keeping
-	// track of the added prefix
-	// lengths
-	lengths := stackgo.NewStack()
 
     ws.trie.EachPrefix(func (info PrefixInfo) (skipsubtree, halt bool) {
-
-		if info.Depth <= last_depth {
-			// we are going up again
-			// in the radix tree so
-			// we roll back the previous
-			// update
-			matrix.RollbackBy(lengths.Pop().(int) - info.SharedLength)
-		}
-		last_depth  = info.Depth
-		matrix.UpdateState([]rune(info.Prefix)[info.SharedLength:])
-		lengths.Push(len(info.Prefix))
 
 		// if this prefix
 		// is not yet a word we took
@@ -115,10 +93,10 @@ func (ws* WordSource) FindMatch(substr string, minSimilarity float32) (matches [
 			return false, false
 		}
 
-		similarity := computeSimilarity(len(matrix.source), len(substr), matrix.Distance())
+		similarity := computeSimilarity(len(info.Prefix), len(substr), LevenshteinDistance(info.Prefix, substr))
 
 		if similarity >= minSimilarity {
-			matches = append(matches, Match{string(matrix.source), similarity})
+			matches = append(matches, Match{string(info.Prefix), similarity})
 			return false, false
 		}
 
