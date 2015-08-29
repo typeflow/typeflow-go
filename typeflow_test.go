@@ -3,123 +3,135 @@ package typeflow
 import (
 	"testing"
 	"fmt"
-	"strings"
-	"os"
-	"io"
-	"bufio"
 )
 
-func (s* LState) printMatrix(t* testing.T) {
-	row := ""
-	for col_index, _ := range s.vec1 {
-		row = fmt.Sprintf("%s[ %v ]", row, s.vec1[col_index])
-	}
-    row = fmt.Sprintf("%s\n", row)
-	for col_index, _ := range s.vec2 {
-		row = fmt.Sprintf("%s[ %v ]", row, s.vec2[col_index])
-	}
-	t.Logf("\n%s\n", row)
-}
-
-type minimum_testcase struct {
-	values []int
-	result int
-}
-
-var minimum_testcases = []minimum_testcase{
-	{ []int{ 3,56,21,45,2,4,1,2 }, 1 },
-	{ []int{ 63,12,4,32,0,7,8,5,34,90}, 0 },
-	{ []int{ 1,2,3,4}, 1},
-	{ []int{ 9,8,7,6,5}, 5},
-}
-
-func Test_minimum(t *testing.T) {
-	for _, v := range minimum_testcases {
-		if min, err := minimum(v.values...); err != nil || min != v.result {
-			t.Errorf("minimum(%v): unexpected result got %d; expected: %d", v.values, min, v.result)
+func (s* LState) print_matrix(t* testing.T) {
+	rows := ""
+	for i := 0; i < len(s.matrix[0]); i++ {
+		row := ""
+		for j := 0; j < len(s.matrix); j++ {
+			row = fmt.Sprintf("%s[ %v ]", row, s.matrix[j][i])
 		}
+		rows = fmt.Sprintf("%s%s\n", rows, row)
 	}
+	t.Logf("\n%s\n", rows)
 }
 
-type perm struct {
+type permutation_t struct {
 	source      string
 	destination string
 	distance    int
 }
 
-var testCases = []perm{
+var basic_test_cases = []permutation_t{
 	{"alessandro", "lessandro", 1},
 	{"alessandro", "alesasndro", 2},
 	{"zzz", "az", 2},
 	{"--|", "---", 1},
 }
 
-// the following cases represent subsequent
-// additions: {'al, 'al', 0}, {'ex', 'es', 1} == 'alex', 'ales', distance: 1
-var incrementalTestCases = [][]perm{
-	{ {"aaa", "abc", 2 } },
-	{{ "al", "al",  0 }, { "ex", "es", 1}},
-	{{"a", "b", 1}, {"aa", "ba", 2}, {"le", "a", 4}},
-	{{"a", "a", 0}, { "l", "l", 0}, {"e", "e", 0}, {"s", "s", 0}, {"s", "a", 1}, {"a", "s", 2}, {"n", "n", 2} },
-	{{"iraq", "rep of ireland", 11}},
-}
-
-func Test_compareSlicesRecursive(t *testing.T) {
-	for _, v := range testCases {
-		if cmp := compareSlicesRecursive([]byte(v.source), []byte(v.destination)); cmp != v.distance {
-			t.Errorf("Comparing '%s' and '%s' failed: result was %v but expected was %v", v.source, v.destination, cmp, v.distance)
+func TestLevenshteinDistance(t *testing.T) {
+	for _, v := range basic_test_cases {
+		if cmp := LevenshteinDistance(v.source, v.destination); cmp != v.distance {
+			t.Errorf("Comparing '%s' and '%s' failed: result was %v but expected was %v",
+				v.source,
+				v.destination,
+				cmp,
+				v.distance)
 		}
 	}
 }
 
-func Test_compareSlicesWithMatrixBaseCase(t *testing.T) {
-	for _, v := range incrementalTestCases {
-		source := make([]rune, 0)
-		dest   := make([]rune, 0)
-		for _, test_case := range v {
-			source = append(source, []rune(test_case.source)...)
-			dest   = append(dest, []rune(test_case.destination)...)
+// represents a single increment
+// within a test case with its
+// associated distance value
+type increment_t struct {
+	source   string
+	distance int
+}
+
+// represents a generic
+// incremental test case
+type incremental_test_case_t struct {
+	target    			string
+	source_increments []increment_t
+}
+
+var incremental_test_cases = []incremental_test_case_t{
+	{"abc", []increment_t{{"aaa", 2}}},
+	{ "alex", []increment_t{{"al",  2}, { "es", 1}}}, // alex, ales
+	{ "aaale", []increment_t{{"b", 5}, {"ba", 4}, {"a", 4}}}, // aaale, bbaa
+	{"iraq", []increment_t{{"rep of ireland", 11}}},
+}
+
+func Test_compare_silces_r(t *testing.T) {
+	for _, v := range incremental_test_cases {
+		var source []rune
+		for _, increment := range v.source_increments {
+			source = append(source, []rune(increment.source)...)
+
+			if cmp := compare_silces_r([]rune(source), []rune(v.target)); cmp != increment.distance {
+				t.Errorf("Comparing '%s' and '%s' failed: result was %v but expected was %v",
+					source,
+					v.target,
+					cmp,
+					increment.distance)
+			}
+		}
+	}
+}
+
+func TestDistanceBaseCase(t *testing.T) {
+	for _, v := range incremental_test_cases {
+		var source   []rune
+		var target   []rune = []rune(v.target)
+		for _, tc := range v.source_increments {
+			source = append(source, []rune(tc.source)...)
 		}
 
-		ls := InitLState()
-		ls.UpdateState([]rune(source), []rune(dest))
+		ls := InitLState(string(target))
+		ls.UpdateState([]rune(source))
 
-		if cmp := ls.Distance(); cmp != v[len(v)-1].distance {
-			t.Logf("Comparing '%s' and '%s' failed: result was %v but expected was %v\n", string(source), string(dest), cmp, v[len(v)-1].distance)
+		if cmp := ls.Distance(); cmp != v.source_increments[len(v.source_increments)-1].distance {
+			t.Logf("Comparing '%s' and '%s' failed: result was %v but expected was %v\n",
+				string(source),
+				string(target), cmp, v.source_increments[len(v.source_increments)-1].distance)
 			t.Logf("Matrix was:\n")
-			ls.printMatrix(t)
+			ls.print_matrix(t)
 			t.FailNow()
 		}
 	}
 }
 
-func Test_compareSlicesWithMatrixIncremental(t* testing.T) {
-	for _, v := range incrementalTestCases {
-		ls := InitLState()
+func TestDistanceIncremental(t* testing.T) {
+	for _, v := range incremental_test_cases {
+		ls := InitLState(v.target)
 
-		for _, increment := range v {
-			ls.UpdateState([]rune(increment.source), []rune(increment.destination))
+		for _, increment := range v.source_increments {
+			ls.UpdateState([]rune(increment.source))
 
 			if cmp := ls.Distance(); cmp != increment.distance {
 				t.Logf("Comparing '%s' and '%s' incrementally failed: result was %v but expected was %v\n",
-					string(ls.w1),
-					string(ls.w2),
+					string(ls.source),
+					string(ls.target),
 					cmp,
 					increment.distance)
 				t.Logf("Matrix was:\n")
-				ls.printMatrix(t)
+				ls.print_matrix(t)
 				t.FailNow()
 			}
 		}
 
-		if len(v) > 1 { // test allows for roll back
-			err := ls.RollbackBy(len(v[len(v) - 1].source), len(v[len(v) - 1].destination))
+		if len(v.source_increments) > 1 { // test allows for roll back
+			err := ls.RollbackBy(len(v.source_increments[len(v.source_increments) - 1].source))
 			if err != nil {
 				t.Errorf("An error occurred during rollback: %v", err)
 			}
 
-			if newDistance := ls.Distance(); newDistance != v[len(v) - 2].distance {
-				t.Errorf("Distance after rolling back is %d, expected is %d", newDistance, v[len(v) - 2].distance)
+			if newDistance := ls.Distance(); newDistance != v.source_increments[len(v.source_increments) - 2].distance {
+				t.Errorf("Distance after rolling back is %d, expected is %d",
+					newDistance,
+					v.source_increments[len(v.source_increments) - 2].distance)
 			}
 		}
 	}
@@ -135,88 +147,19 @@ type expected_match struct {
 	similarity_range similarity_range
 }
 
-type word_source_test struct {
-	substr   string
-	expected_matches []expected_match
-}
-
-var word_source_tests = []word_source_test{
-	{ "rep of ireland", []expected_match{{"Ireland (Republic)", similarity_range{0.3, 0.35}}} },
-}
-
-func Test_wordSource(t *testing.T) {
-    ws := NewWordSource()
-
-	var filter WordFilter = func (w string) (word string, skip bool) {
-		word = strings.ToLower(w)
-		skip = false
-
-		return
-	}
-
-	// building country name
-	// source from file
-    file, err := os.Open("testdata/countries.txt")
-	country_names := make([]string, 0)
-	if err != nil {
-		t.Log("Cannot open expected file testdata/countries.txt. Skipping this test.")
-		t.SkipNow()
-		return
-	}
-    reader := bufio.NewReader(file)
-	for  {
-		line, err := reader.ReadString('\n');
-		if err == io.EOF {
-			break
-		}
-		country_names = append(country_names, line[:len(line)-1])
-	}
-
-	ws.SetSource(country_names, []WordFilter{ filter })
-
-OuterLoop:
-	for _, test := range word_source_tests {
-		t.Logf("Finding matches for substring '%s'", test.substr)
-		matches, err := ws.FindMatch(test.substr, 0.32)
-		if err != nil {
-			t.Logf("An error occurred: %v", err)
-			for _, m := range matches {
-				t.Logf("%s, %f", m.Word, m.Similarity)
-			}
-			t.FailNow()
-		}
-
-		for _, match := range matches {
-			for _, expected := range test.expected_matches {
-				if match.Similarity >= expected.similarity_range.low &&
-				match.Similarity <= expected.similarity_range.high {
-					t.Log("Found!")
-					continue OuterLoop
-				}
-			}
-		}
-		t.Logf("Couldn't find expected match")
-		t.Logf("Found the following matches:")
-		for _, m := range matches {
-			t.Logf("'%s', '%f'", m.Word, m.Similarity)
-		}
-		t.FailNow()
-	}
-}
-
 func Benchmark_recursiveLevenshtein(b *testing.B) {
-    for i:= 0; i < b.N; i++ {
-    	for _, v := range testCases {
-    		compareSlicesRecursive([]byte(v.source), []byte(v.destination))
+    for i := 0; i < b.N; i++ {
+    	for _, v := range basic_test_cases {
+    		compare_silces_r([]rune(v.source), []rune(v.destination))
     	}
     }
 }
 
 func Benchmark_matrixLevenshtein(b *testing.B) {
     for i:= 0; i < b.N; i++ {    
-    	for _, v := range testCases {
-    		ls := InitLState()
-    		ls.UpdateState([]rune(v.source), []rune(v.destination))
+    	for _, v := range basic_test_cases {
+    		ls := InitLState(v.destination)
+    		ls.UpdateState([]rune(v.source))
     	}
     }
 }

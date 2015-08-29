@@ -37,11 +37,7 @@ type Match struct {
 }
 
 func computeSimilarity(lenw1, lenw2, ld int) (float32) {
-	den, err := maximum(lenw1, lenw2)
-
-	if err != nil {
-		panic(err)
-	}
+	den := maximum(lenw1, lenw2)
 
 	return 1.0 - float32(ld)/float32(den)
 }
@@ -79,47 +75,35 @@ type dirty_range struct {
 // in the source.
 // minSimilarity is the minimum accepted similarity
 // to use when filling the matches slice.
-// substr is the string to match against.
+// Param substr is the string to match against.
 func (ws* WordSource) FindMatch(substr string, minSimilarity float32) (matches []Match, err error) {
 	matches = make([]Match, 0, ws.wc)
-	word  := make([]rune, 0)
-
-	matrix := InitLState()
-	matrix.UpdateState([]rune{}, []rune(substr))
-
 	err = nil
-	last_depth := 0
-	dirty_range := dirty_range{0, 0}
 
-    ws.trie.EachNode(func (node *TrieNode, halt *bool) {
-		rollback_size := 0
-		if !node.IsRoot() {
-			if node.Depth() <= last_depth {
-				rollback_size = (last_depth - node.Depth() + 1)
-				word = word[:len(word) - rollback_size]
-				err = matrix.RollbackBy(rollback_size, 0)
-				if err != nil {
-				    *halt = true
-					return
-				}
-				dirty_range.low -= rollback_size
-				dirty_range.length = 0
-			}
+    ws.trie.EachPrefix(func (info PrefixInfo) (skipsubtree, halt bool) {
 
-			word = append(word, node.C)
-			dirty_range.length += 1
-			matrix.UpdateState([]rune(word[dirty_range.low:(dirty_range.low + dirty_range.length)]), []rune{})
-			dirty_range.low    += dirty_range.length
-			dirty_range.length = 0
+		// if this prefix
+		// is not yet a word we took
+		// the advantage of preparing
+		// the comparison matrix
+		// in advance as for sure the
+		// words that are about to come
+		// will have this as prefix string
+		if !info.IsWord {
+			return false, false
 		}
 
-		if node.IsWord {
-			if similarity := computeSimilarity(len(word), len(substr), matrix.Distance()); similarity >= minSimilarity {
-				matches = append(matches, Match{string(word), similarity})
-			}
+		similarity := computeSimilarity(len(info.Prefix), len(substr), LevenshteinDistance(info.Prefix, substr))
+
+		if similarity >= minSimilarity {
+			matches = append(matches, Match{string(info.Prefix), similarity})
+			return false, false
 		}
 
-		last_depth = node.Depth()
+		// the computed similarity is too low
+		// so there's no need to proceed further
+		// with this subtree
+		return true, false
 	})
 
 	return
