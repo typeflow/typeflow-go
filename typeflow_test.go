@@ -163,3 +163,11 @@ func Benchmark_matrixLevenshtein(b *testing.B) {
     	}
     }
 }
+
+func Benchmark_TwoRowsLevenshtein(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        for _, v := range basic_test_cases {
+            LevenshteinDistance(v.destination, v.source)
+        }
+    }
+}
