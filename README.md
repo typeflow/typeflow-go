@@ -3,8 +3,11 @@ typeflow-go [![GoDoc](https://godoc.org/github.com/typeflow/typeflow-go/web?stat
 
 - [Introduction](#Introduction)
 - [Quick start](#quick-start)
-  - [Dependencies](##dependencies)
-  - [A straightforward example](##a-straightforward-example)
+  - [Dependencies](#dependencies)
+  - [Plain Levenshtein distance computation](#plain-levenshtein-distance-computation)
+  - [Querying for similar strings](#querying-for-similar-strings)
+    - [The similarity](#the-similarity)
+  - [A straightforward example](#a-straightforward-example)
 - [A note on similarity](#a-note-on-similarity)
 - [Docs](#docs)
 - [Benchmarks](#benchmarks)
@@ -13,7 +16,8 @@ typeflow-go [![GoDoc](https://godoc.org/github.com/typeflow/typeflow-go/web?stat
 
 Introduction
 ------------
-**typeflow** is a tiny package developed in my free time to learn something more about the [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) and provide some tools around stringgo-based searching needs.
+**typeflow** is a tiny package developed in my free time to learn something more about the [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) and provide some tools around string-based searching needs.
+With **typeflow** you'll be able to search for non-perfect matches and get them sorted by their similarity with the query string.
 
 Quick start
 -----------
@@ -32,6 +36,32 @@ So make sure you `go get` them :)
 $ go get github.com/alediaferia/stackgo
 $ go get github.com/typeflow/triego
 ```
+
+### Plain Levenshtein distance computation
+If you just need to compute the Levenshtein distance between 2 words this is what you need:
+
+```go
+LevenshteinDistance("alessandro", "alesasndro")
+```
+
+This will return
+
+```bash
+2
+```
+
+### Querying for similar strings
+This package can be used for querying against a source of strings (currently represented just through a list of strings).
+For this particular need [WordSource](https://godoc.org/github.com/typeflow/typeflow-go#WordSource) has been designed specifically.
+
+```go
+ws := NewWordSource()
+ws.SetSource(myListOfStrings, myListOfFilters)
+matches := ws.FindMatches("query", 0.4)
+```
+
+#### The similarity
+`0.4` represents the minimum similarity we are OK with. A value of 1.0 represents an exact match.
 
 ### A straightforward example
 
@@ -136,7 +166,7 @@ func main() {
 
 Output:
 
-```
+```bash
 $ go run <program name> nig 0.4
 ```
 
