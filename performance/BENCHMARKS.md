@@ -7,9 +7,10 @@ Results
 
 [2 matrix rows approach](https://en.wikipedia.org/wiki/Levenshtein_distance#Iterative_with_two_matrix_rows) is now used!
 
-  Times | ns/op  | B/op   | allocs/op |       CPU              | Needs Update 
---------|--------|--------|-----------|------------------------|--------------
- 200000 |  7423 | 1424   |    28     |  2.5 GHz Intel Core i7 |     NO
+Operation             |  Times | ns/op  | B/op   | allocs/op |       CPU              | Revision
+----------------------|--------|--------|--------|-----------|------------------------|--------------
+ 2 Rows Lev. Distance | 200000 |  7537 | 760   |    16     |  2.3 GHz Intel Core i5 |     master
+ Find match (WordSource) | 2000 | 856892 | n/a | n/a |  2.3 GHz Intel Core i5  | master
 
 Usage
 ------
