@@ -1,4 +1,4 @@
-typeflow-go [![GoDoc](https://godoc.org/github.com/typeflow/typeflow-go/web?status.png)](https://godoc.org/github.com/typeflow/typeflow-go)
+typeflow-go [![GoDoc](https://godoc.org/github.com/typeflow/typeflow-go/web?status.png)](https://godoc.org/github.com/typeflow/typeflow-go) [![Build Status](https://travis-ci.org/typeflow/typeflow-go.svg?branch=develop)](https://travis-ci.org/typeflow/typeflow-go) [![Coverage Status](https://coveralls.io/repos/typeflow/typeflow-go/badge.svg?branch=master&service=github)](https://coveralls.io/github/typeflow/typeflow-go?branch=master)
 =============
 
 - [Introduction](#Introduction)
