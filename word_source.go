@@ -2,6 +2,7 @@ package typeflow
 
 import (
 	. "github.com/typeflow/triego"
+	"sort"
 )
 
 // Represents a filter to apply to the
@@ -71,6 +72,23 @@ type dirty_range struct {
 	length int
 }
 
+type Matches []Match
+
+func (matches Matches) Len() int {
+	return len(matches)
+}
+
+func (matches Matches) Less(i, j int) bool {
+	return matches[i].Similarity > matches[j].Similarity
+}
+
+func (matches Matches) Swap(i, j int) {
+	mi := matches[i]
+	mj := matches[j]
+	matches[i] = mj
+	matches[j] = mi
+}
+
 // Finds a match among the current words
 // in the source.
 // minSimilarity is the minimum accepted similarity
@@ -96,9 +114,13 @@ func (ws* WordSource) FindMatch(substr string, minSimilarity float32) (matches [
 		similarity := computeSimilarity(len(info.Prefix), len(substr), LevenshteinDistance(info.Prefix, substr))
 
 		if similarity >= minSimilarity {
-			matches = append(matches, Match{string(info.Prefix), similarity})
+			for _, str := range info.Data {
+				matches = append(matches, Match{str, similarity})
+			}
 			return false, false
 		}
+
+		sort.Sort(Matches(matches))
 
 		// the computed similarity is too low
 		// so there's no need to proceed further
