@@ -14,7 +14,8 @@ type word_source_test struct {
 }
 
 var word_source_tests = []word_source_test{
-	{"rep of ireland", []expected_match{{"ireland (republic)", similarity_range{0.45, 0.55}}}},
+	{"rep of ireland", []expected_match{{"ireland (republic)", similarity_range{0.32, 0.34}}}},
+	{"united", []expected_match{{"united states", similarity_range{1.0, 1.5}}}},
 }
 
 func TestWordSource(t *testing.T) {
@@ -61,7 +62,7 @@ OuterLoop:
 
 		for _, match := range matches {
 			for _, expected := range test.expected_matches {
-				if match.Similarity >= expected.similarity_range.low &&
+				if match.Word == expected.word && match.Similarity >= expected.similarity_range.low &&
 					match.Similarity <= expected.similarity_range.high {
 					t.Log("Found!")
 					continue OuterLoop
