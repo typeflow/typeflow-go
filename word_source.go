@@ -65,23 +65,6 @@ type dirty_range struct {
     length int
 }
 
-type Matches []Match
-
-func (matches Matches) Len() int {
-    return len(matches)
-}
-
-func (matches Matches) Less(i, j int) bool {
-    return matches[i].Similarity > matches[j].Similarity
-}
-
-func (matches Matches) Swap(i, j int) {
-    mi := matches[i]
-    mj := matches[j]
-    matches[i] = mj
-    matches[j] = mi
-}
-
 // FindMatch Finds a match among the current words
 // in the source.
 // minSimilarity is the minimum accepted similarity
