@@ -18,6 +18,8 @@ Introduction
 **typeflow** is a tiny package that provides a few tools around string-based searching needs.
 With **typeflow** you'll be able to search for sub-string matches and get string similarity information.
 
+You can see it in action here: https://typeflow-web.herokuapp.com/ .
+
 Quick start
 -----------
 Likely you'll want to use the `WordSource` type which provides the most high-level interface in this package.
